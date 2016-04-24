@@ -20,9 +20,9 @@ var pool = new master.pool;
 var data = {
   message : "Om nom"
 };
-var worker = pool.take();
 
 function simple_test(){
+  var worker = pool.take();
   worker.exec(script, 'somefunc', data, 500, function(err, msg){
 		console.log('PARENT receiving', msg, err);
 	      });
@@ -42,12 +42,12 @@ function simple_test(){
 
 function heavy_test(){
   var ind = 0;
-  while(ind != 50){
+  while(ind != 200){
     var worker = pool.take();
-    console.log('started ', ind);
-    worker.exec(script, 'somefunc', data, 2000, function(err, msg){
-		   console.log('PARENT receinving', msg, err);
-		 });  
+    //    console.log('started ', ind);
+    worker.exec(script, 'somefunc', data, 2200, function(err, msg){
+		  console.log('PARENT receinving', msg, err);
+		});  
     ind++;
   }
 }

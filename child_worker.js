@@ -23,6 +23,6 @@ function run_in_duktape(code, func, data, context){
 }
 
 process.on('message', function(msg) {
-	     //process.send(run_in_duktape(msg.code, msg.entry, msg.data, { console_log : console.log }));
-	     process.send(run_in_v8(msg.code, msg.entry, msg.data, { console_log : console.log }));
+	     process.send(run_in_duktape(msg.code, msg.entry, msg.data, { console_log : console.log }));
+	     //process.send(run_in_v8(msg.code, msg.entry, msg.data, { console_log : console.log }));
 });
