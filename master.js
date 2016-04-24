@@ -10,11 +10,12 @@ function child(id, process){
 child.prototype.exec = function(code, entry, data, timeout, callback){
   var self = this;
   this.cb = callback;
+//  console
   this.process.on('message', function(msg){
 		    if(msg.result)
 		      self.cb(undefined, msg.result);
 		    else
-		      self.cb('error during execution');
+		      self.cb(msg.error);
 		    self.free = true;
 		    self.pool.put(self);
 		  });
@@ -66,42 +67,7 @@ workers_pool.prototype.delete = function(worker){
   worker.process.kill("SIGKILL");  
 };
 
-var pool = new workers_pool;
+module.exports.pool = workers_pool;
 
-var data = {
-  hom : "Hah HAh"
-};
  
-var script = " \
-  function somefunc(obj) { \
-    console_log(\"dd\", obj.hom);\
-    return { \
-      value: 'HOHO' + obj.hom \
-    }; \
-  }";
-
-var inf_script = " \
-  function somefunc(obj) { \
-    while(true) console_log('hahahUHAHA');\
-    console_log(\"dd\", obj.hom);\
-  }";
-
-
-var worker = pool.take();
-
-worker.exec(script, 'somefunc', data, 500, function(err, msg){
-	      console.log('PARENT', msg, err);
-	    });
-
-var worker1 = pool.take();
-
-worker1.exec(inf_script, 'somefunc', data, 1000, function(err, msg){
-	      console.log('PARENT', msg, err);
-	    });
-
-var worker2 = pool.take();
-
-worker2.exec(script, 'somefunc', data, 500, function(err, msg){
-	      console.log('PARENT', msg, err);
-	    });
 
