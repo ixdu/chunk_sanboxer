@@ -3,21 +3,39 @@ var child_process = require('child_process');
 var fork = require('child_process').fork;
 
 function child(id, process){
+  var self = this;
   this.id = id,
   this.process = process;
+
+  this.process.on('message', function(msg){
+		    if(msg.result){
+		      self.cb(undefined, msg.result);		      
+		      if(self.pool.free.length >= self.pool.max_free){
+			self.pool.delete(self);
+//			console.log('pool workers is ', self.pool.free.length);		      
+		      }
+		      else {
+			console.log(counter++);
+			self.free = true;
+			self.pool.put(self);		      
+		      }
+		    }
+		    else {
+		      self.cb(msg.error);
+		      self.pool.delete(self);		      
+		    }
+		  });
+  this.process.on('error', function(err){
+//		    console.log('something is happend ', err);
+		  });
+  this.process.on('exit', function(code, signal){
+//		    console.log('process is exited ', code, signal);
+		  });
 }
 
+var counter = 0;
 child.prototype.exec = function(code, entry, data, timeout, callback){
-  var self = this;
   this.cb = callback;
-  this.process.on('message', function(msg){
-		    if(msg.result)
-		      self.cb(undefined, msg.result);
-		    else
-		      self.cb(msg.error);
-		    self.free = true;
-		    self.pool.put(self);
-		  });
   this.process.send({ 
 		      code : code,
 		      entry : entry,
@@ -25,15 +43,14 @@ child.prototype.exec = function(code, entry, data, timeout, callback){
 		    });
   this.started_time = (new Date()).getTime();
   this.timeout = timeout;
-
-  this.pool.checker_activate();
 };
 
 child.prototype.stop = function(){
   this.process.close();  
 };
 
-function workers_pool(){
+function workers_pool(max_free){
+  this.max_free = max_free;
   this.index = 0;
   this.free = [];
   this.busy = [];
@@ -68,7 +85,8 @@ workers_pool.prototype.take = function(){
   this.busy.push(worker);
   worker.free = false;
   worker.pool = this;
-
+  console.log('counter is ', worker.id);
+  this.checker_activate();
   return worker;
 };
 
@@ -88,7 +106,7 @@ workers_pool.prototype.put = function(worker){
 
 workers_pool.prototype.delete = function(worker){
   delete_from_array(this.busy, worker);
-  console.log('length after ', this.busy.length);
+ // console.log('length after ', this.busy.length);
   worker.process.kill("SIGKILL");  
 };
 

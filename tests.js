@@ -15,7 +15,7 @@ var inf_script = " \
   }";
 
 
-var pool = new master.pool;
+var pool = new master.pool(150);
 
 var data = {
   message : "Om nom"
@@ -40,12 +40,15 @@ function simple_test(){
 	       });  
 }
 
+var counter = 0;
+
 function heavy_test(){
   var ind = 0;
-  while(ind != 200){
+  while(ind < 130){
     var worker = pool.take();
     //    console.log('started ', ind);
-    worker.exec(script, 'somefunc', data, 2200, function(err, msg){
+    data.message = "Om Nom " + counter++;
+    worker.exec(script, 'somefunc', data, 5000, function(err, msg){
 		  console.log('PARENT receinving', msg, err);
 		});  
     ind++;
@@ -53,3 +56,16 @@ function heavy_test(){
 }
 
 heavy_test();
+
+setTimeout(function(){
+	     console.log('hot start');
+	     heavy_test();
+}, 3000);
+setTimeout(function(){
+	     console.log('hot start');
+	     heavy_test();
+}, 3200);
+setTimeout(function(){
+	     console.log('hot start');
+	     heavy_test();
+}, 3500);
